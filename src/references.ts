@@ -25,6 +25,15 @@ export interface CellRef {
   colAbsolute: boolean
 }
 
+// A range is just its two corners. Which corner is "start" vs "end" is
+// whatever order they appeared in the formula - we don't normalize
+// top-left/bottom-right the way a spreadsheet engine evaluating the range
+// would, since that's not needed to translate notations.
+export interface RangeRef {
+  start: CellRef
+  end: CellRef
+}
+
 // Excel's rightmost column is XFD, three letters, so real spreadsheets never
 // need more than that. Capping the pattern here keeps it from swallowing
 // ordinary words like "CAT1" as if they were column references.
@@ -105,4 +114,30 @@ export function formatR1C1CellRef(ref: CellRef, anchor: Anchor): string {
       ? ''
       : `[${ref.col - anchor.col}]`
   return `R${rowPart}C${colPart}`
+}
+
+export function parseA1Range(text: string): RangeRef | null {
+  const separator = text.indexOf(':')
+  if (separator === -1) return null
+  const start = parseA1CellRef(text.slice(0, separator))
+  const end = parseA1CellRef(text.slice(separator + 1))
+  if (!start || !end) return null
+  return { start, end }
+}
+
+export function formatA1Range(range: RangeRef): string {
+  return `${formatA1CellRef(range.start)}:${formatA1CellRef(range.end)}`
+}
+
+export function parseR1C1Range(text: string, anchor: Anchor): RangeRef | null {
+  const separator = text.indexOf(':')
+  if (separator === -1) return null
+  const start = parseR1C1CellRef(text.slice(0, separator), anchor)
+  const end = parseR1C1CellRef(text.slice(separator + 1), anchor)
+  if (!start || !end) return null
+  return { start, end }
+}
+
+export function formatR1C1Range(range: RangeRef, anchor: Anchor): string {
+  return `${formatR1C1CellRef(range.start, anchor)}:${formatR1C1CellRef(range.end, anchor)}`
 }

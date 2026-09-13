@@ -5,9 +5,13 @@ import {
   columnLetterToNumber,
   columnNumberToLetter,
   formatA1CellRef,
+  formatA1Range,
   formatR1C1CellRef,
+  formatR1C1Range,
   parseA1CellRef,
+  parseA1Range,
   parseR1C1CellRef,
+  parseR1C1Range,
 } from './references.js'
 
 test('columnLetterToNumber converts single and multi-letter columns', () => {
@@ -116,4 +120,57 @@ test('formatR1C1CellRef omits axes that equal the anchor', () => {
 test('formatR1C1CellRef writes absolute axes as bare numbers regardless of anchor', () => {
   const anchor = { row: 3, col: 3 }
   assert.equal(formatR1C1CellRef({ row: 3, col: 3, rowAbsolute: true, colAbsolute: true }, anchor), 'R3C3')
+})
+
+test('parseA1Range parses both corners', () => {
+  assert.deepEqual(parseA1Range('A1:B2'), {
+    start: { row: 1, col: 1, rowAbsolute: false, colAbsolute: false },
+    end: { row: 2, col: 2, rowAbsolute: false, colAbsolute: false },
+  })
+  assert.deepEqual(parseA1Range('$A$1:B2'), {
+    start: { row: 1, col: 1, rowAbsolute: true, colAbsolute: true },
+    end: { row: 2, col: 2, rowAbsolute: false, colAbsolute: false },
+  })
+})
+
+test('parseA1Range rejects malformed ranges', () => {
+  assert.equal(parseA1Range('A1'), null)
+  assert.equal(parseA1Range('A1:'), null)
+  assert.equal(parseA1Range(':A1'), null)
+  assert.equal(parseA1Range('A1:B2:C3'), null)
+})
+
+test('formatA1Range round-trips through parseA1Range', () => {
+  for (const text of ['A1:B2', '$A$1:$B$2', 'A1:A1']) {
+    assert.equal(formatA1Range(parseA1Range(text)!), text)
+  }
+})
+
+test('parseR1C1Range resolves both corners against the anchor', () => {
+  const anchor = { row: 3, col: 3 }
+  assert.deepEqual(parseR1C1Range('RC:R[1]C[1]', anchor), {
+    start: { row: 3, col: 3, rowAbsolute: false, colAbsolute: false },
+    end: { row: 4, col: 4, rowAbsolute: false, colAbsolute: false },
+  })
+})
+
+test('parseR1C1Range rejects malformed ranges', () => {
+  const anchor = { row: 3, col: 3 }
+  assert.equal(parseR1C1Range('RC', anchor), null)
+  assert.equal(parseR1C1Range('RC:', anchor), null)
+  assert.equal(parseR1C1Range('RC:R1C1:R2C2', anchor), null)
+})
+
+test('formatR1C1Range omits axes that equal the anchor, per corner', () => {
+  const anchor = { row: 3, col: 3 }
+  assert.equal(
+    formatR1C1Range(
+      {
+        start: { row: 3, col: 3, rowAbsolute: false, colAbsolute: false },
+        end: { row: 4, col: 4, rowAbsolute: false, colAbsolute: false },
+      },
+      anchor,
+    ),
+    'RC:R[1]C[1]',
+  )
 })

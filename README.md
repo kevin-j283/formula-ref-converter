@@ -28,17 +28,28 @@ convertFormulaR1C1ToA1('=R[-2]C[-2]+R1C2', anchor)
 // => '=A1+B1'
 ```
 
-Reference-level helpers are also exported for anyone who wants to work with
-a single cell reference instead of a whole formula:
+Range references (`A1:B2`) are converted as a unit, with each corner
+resolved against the same anchor:
 
 ```ts
-import { parseA1CellRef, formatR1C1CellRef } from './src/index.js'
+convertFormulaA1ToR1C1('=SUM(A1:B10)', { row: 3, col: 3 })
+// => '=SUM(R[-2]C[-2]:R[7]C[-1])'
+```
+
+Reference-level helpers are also exported for anyone who wants to work with
+a single cell or range instead of a whole formula:
+
+```ts
+import { parseA1CellRef, formatR1C1CellRef, parseA1Range } from './src/index.js'
 
 const ref = parseA1CellRef('$B$7')
 // => { row: 7, col: 2, rowAbsolute: true, colAbsolute: true }
 
 formatR1C1CellRef(ref!, { row: 3, col: 3 })
 // => 'R7C2'
+
+parseA1Range('A1:B2')
+// => { start: { row: 1, col: 1, ... }, end: { row: 2, col: 2, ... } }
 ```
 
 Every exported function is pure: given the same arguments it always returns
@@ -57,9 +68,6 @@ dependencies to install.
 
 ## Known limitations (first pass)
 
-- Range references (`A1:B2`) are converted one endpoint at a time; the
-  colon between them is passed through untouched, which happens to work but
-  isn't validated as a range.
 - Sheet-qualified references (`Sheet1!A1`) are not specially recognized —
   the sheet name is left alone and only the trailing cell reference is
   converted.

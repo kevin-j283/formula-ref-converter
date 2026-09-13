@@ -39,6 +39,17 @@ test('convertFormulaR1C1ToA1 does not mangle words that contain RC', () => {
   assert.equal(convertFormulaR1C1ToA1('=SEARCH("x",R1C1)', anchor), '=SEARCH("x",A1)')
 })
 
+test('convertFormulaR1C1ToA1 converts a range', () => {
+  assert.equal(convertFormulaR1C1ToA1('=SUM(R[-2]C[-2]:R[7]C[-2])', anchor), '=SUM(A1:A10)')
+})
+
+test('range conversion round-trips both directions', () => {
+  assert.equal(
+    convertFormulaR1C1ToA1(convertFormulaA1ToR1C1('=SUM(A1:B10)', anchor), anchor),
+    '=SUM(A1:B10)',
+  )
+})
+
 test('conversion is a no-op round trip for a formula with no references', () => {
   assert.equal(convertFormulaA1ToR1C1('=TODAY()+1', anchor), '=TODAY()+1')
   assert.equal(convertFormulaR1C1ToA1('=TODAY()+1', anchor), '=TODAY()+1')
