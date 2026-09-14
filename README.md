@@ -36,6 +36,15 @@ convertFormulaA1ToR1C1('=SUM(A1:B10)', { row: 3, col: 3 })
 // => '=SUM(R[-2]C[-2]:R[7]C[-1])'
 ```
 
+A sheet name prefix (`Sheet1!A1`, `'My Sheet'!A1:B2`) is recognized and
+carried over unchanged, since both notations write sheet names the same way
+— only the cell or range part is converted:
+
+```ts
+convertFormulaA1ToR1C1("=Sheet1!A1+'My Sheet'!B2", { row: 3, col: 3 })
+// => "=Sheet1!R[-2]C[-2]+'My Sheet'!R[-1]C[-1]"
+```
+
 Reference-level helpers are also exported for anyone who wants to work with
 a single cell or range instead of a whole formula:
 
@@ -68,9 +77,6 @@ dependencies to install.
 
 ## Known limitations (first pass)
 
-- Sheet-qualified references (`Sheet1!A1`) are not specially recognized —
-  the sheet name is left alone and only the trailing cell reference is
-  converted.
 - Whole-row/whole-column references (`R1` or `C1` alone, or A1-style `1:1`)
   are not handled yet.
 - The word-boundary checks that keep the converter from mangling function

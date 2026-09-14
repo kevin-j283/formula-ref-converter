@@ -54,3 +54,24 @@ test('conversion is a no-op round trip for a formula with no references', () => 
   assert.equal(convertFormulaA1ToR1C1('=TODAY()+1', anchor), '=TODAY()+1')
   assert.equal(convertFormulaR1C1ToA1('=TODAY()+1', anchor), '=TODAY()+1')
 })
+
+test('convertFormulaA1ToR1C1 carries an unquoted sheet prefix over unchanged', () => {
+  assert.equal(convertFormulaA1ToR1C1('=Sheet1!A1', anchor), '=Sheet1!R[-2]C[-2]')
+})
+
+test('convertFormulaA1ToR1C1 carries a quoted sheet prefix over unchanged', () => {
+  assert.equal(convertFormulaA1ToR1C1("='My Sheet'!$B$1", anchor), "='My Sheet'!R1C2")
+})
+
+test('convertFormulaR1C1ToA1 carries a sheet prefix over unchanged', () => {
+  assert.equal(convertFormulaR1C1ToA1('=Sheet1!RC', anchor), '=Sheet1!C3')
+})
+
+test('sheet prefix applies to a whole range, not each corner', () => {
+  assert.equal(convertFormulaA1ToR1C1('=SUM(Sheet1!A1:B10)', anchor), '=SUM(Sheet1!R[-2]C[-2]:R[7]C[-1])')
+  assert.equal(convertFormulaR1C1ToA1('=SUM(Sheet1!R[-2]C[-2]:R[7]C[-1])', anchor), '=SUM(Sheet1!A1:B10)')
+})
+
+test('a sheet name with a doubled quote escapes correctly', () => {
+  assert.equal(convertFormulaA1ToR1C1("='O''Brien''s Sheet'!A1", anchor), "='O''Brien''s Sheet'!R[-2]C[-2]")
+})
